@@ -11,6 +11,7 @@ module.exports = async function handler(req, res) {
   const GUILD_ID = process.env.DISCORD_GUILD_ID;
   const CLIENT_ROLE_ID = process.env.DISCORD_CLIENT_ROLE_ID;
   const REDIRECT_URI = 'https://community.lifestyleperformance.nl/api/discord-callback';
+  const RETURN_URL = 'https://lifestyleperformance.nl/client-onboarding';
 
   try {
     const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
@@ -70,13 +71,14 @@ module.exports = async function handler(req, res) {
     }
 
     return res.status(200).send(
-      '<html><body style="font-family: sans-serif; text-align: center; padding: 60px;">' +
+      '<html><head><meta http-equiv="refresh" content="5;url=' + RETURN_URL + '"></head>' +
+      '<body style="font-family: sans-serif; text-align: center; padding: 60px;">' +
       '<h1>Welkom bij de exclusieve community!</h1>' +
       '<p>Je account is succesvol gekoppeld en geupgraded.</p>' +
+      '<p style="color:#888; font-size:14px;">Je wordt over 5 seconden teruggestuurd...</p>' +
       '</body></html>'
     );
   } catch (err) {
     return res.status(500).send('Er ging iets mis. Probeer het later opnieuw.');
   }
 };
-
