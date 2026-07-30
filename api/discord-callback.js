@@ -10,6 +10,7 @@ module.exports = async function handler(req, res) {
   const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
   const GUILD_ID = process.env.DISCORD_GUILD_ID;
   const CLIENT_ROLE_ID = process.env.DISCORD_CLIENT_ROLE_ID;
+  const OLD_ROLE_ID = '1343942896562339860';
   const REDIRECT_URI = 'https://community.lifestyleperformance.nl/api/discord-callback';
   const RETURN_URL = 'https://lifestyleperformance.nl/client-onboarding';
 
@@ -68,6 +69,21 @@ module.exports = async function handler(req, res) {
     if (!roleResponse.ok) {
       const errText = await roleResponse.text();
       return res.status(500).send('Rol toewijzen mislukt: ' + errText);
+    }
+
+    // Verwijder de oude rol (bv. "Lead"), zodat alleen de Client-rol overblijft.
+    // We negeren fouten hier bewust: als de gebruiker de oude rol toch niet had,
+    // geeft Discord een fout die de flow niet mag blokkeren.
+    try {
+      await fetch(
+        'https://discord.com/api/guilds/' + GUILD_ID + '/members/' + userId + '/roles/' + OLD_ROLE_ID,
+        {
+          method: 'DELETE',
+          headers: { Authorization: 'Bot ' + BOT_TOKEN },
+        }
+      );
+    } catch (e) {
+      // Bewust genegeerd, zie toelichting hierboven.
     }
 
     return res.status(200).send(
