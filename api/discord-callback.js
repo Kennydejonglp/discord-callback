@@ -14,6 +14,8 @@ module.exports = async function handler(req, res) {
   const REDIRECT_URI = 'https://community.lifestyleperformance.nl/api/discord-callback';
   const RETURN_URL = 'https://lifestyleperformance.nl/client-onboarding';
 
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
   try {
     const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
@@ -71,9 +73,15 @@ module.exports = async function handler(req, res) {
       return res.status(500).send('Rol toewijzen mislukt: ' + errText);
     }
 
-    // Verwijder de oude rol (bv. "Lead"), zodat alleen de Client-rol overblijft.
-    // We negeren fouten hier bewust: als de gebruiker de oude rol toch niet had,
-    // geeft Discord een fout die de flow niet mag blokkeren.
+    // Korte vertraging: Discord's eigen "geef nieuwe leden automatisch een rol"
+    // (via onboarding/MEE6) kent een kleine vertraging na het accepteren van de
+    // serverregels. We wachten hier even zodat die toewijzing eerst kan gebeuren,
+    // voordat wij de oude rol weer verwijderen.
+    await sleep(4000);
+
+    // Verwijder de oude rol (bv. "Lifestyle Performance Member"), zodat alleen
+    // de Client-rol overblijft. Fouten worden bewust genegeerd: als de gebruiker
+    // de oude rol toch niet had, mag dat de flow niet blokkeren.
     try {
       await fetch(
         'https://discord.com/api/guilds/' + GUILD_ID + '/members/' + userId + '/roles/' + OLD_ROLE_ID,
